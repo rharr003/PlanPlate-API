@@ -39,7 +39,11 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "api",
-    "rest_framework.authtoken"
+    "rest_framework.authtoken",
+    "fooditems",
+    "foodserving",
+    "mealplans",
+    "meals"
 ]
 
 MIDDLEWARE = [
@@ -130,3 +134,5 @@ STATIC_URL = "static/"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+# tells django to use my custom user model
+AUTH_USER_MODEL = 'api.CustomUser'

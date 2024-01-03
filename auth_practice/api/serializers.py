@@ -1,13 +1,11 @@
 from rest_framework import serializers
-from django.contrib.auth.models import User
-from rest_framework.authtoken.models import Token
-
+from .models import CustomUser
+        
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ["id", "username", "last_login", "password", "email", "is_superuser", "is_staff" ]
+        model = CustomUser
+        fields = ["id", "username", "last_login", "password", "email", "is_superuser", "is_staff", "weight", "weight_format", "height", "height_format", "date_of_birth"]
         extra_kwargs = {'password': {'write_only': True}}
-        
         
       
       
