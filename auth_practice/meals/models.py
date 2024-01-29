@@ -8,6 +8,11 @@ class Meal(models.Model):
     owner = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     type = models.CharField(choices=[("meal", "meal"), ("snack", "snack")], max_length=5)
     meal_plan = models.ManyToManyField(MealPlan, through='MealPlanOrder')
+    def update(self, fields):
+        for field_name, value in fields.items():
+            setattr(self, field_name, value)
+        self.save(update_fields=fields)
+        return self
     
 class MealPlanOrder(models.Model):
     meal = models.ForeignKey(Meal, on_delete=models.CASCADE)
