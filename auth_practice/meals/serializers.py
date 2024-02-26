@@ -3,7 +3,6 @@ from rest_framework import serializers
 from foodserving.serializers import FoodServingSerializer
 class MealSerializer(serializers.ModelSerializer):
     owner_id = serializers.IntegerField(write_only=True)
-    # food_servings = FoodServingSerializer(read_only=True, many=True, source="foodserving_set")
     food_servings = serializers.SerializerMethodField(read_only=True)
     #using a method here lets us have the returned list of food_servings properly ordered
     def get_food_servings(self, model):

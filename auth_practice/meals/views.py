@@ -37,7 +37,7 @@ def meal(request):
             return Response({"message": "You can only edit meals you are the owner of"}, status=401)
         if request.method == "DELETE":
             meal_to_edit.delete()
-            return Response({"message": "successfully deleted meal"})
+            return Response({"message": "successfully deleted meal"}, status=200)
         elif request.method == "PUT":
             serializer = MealSerializer(meal_to_edit)
             data = {key: value for key, value in request.data.items() if key in serializer.data}
@@ -63,6 +63,7 @@ def meal_detail(request, meal_id):
         serializer = MealSerializer(meal)
         return Response(serializer.data)   
     try:
+        #Post method on this route is for adding new food_serving at a specified index and adjusting the index of the rest of the items accordingly so that everything stays in the correct order.
         if request.method == "POST":
             food_serving = get_object_or_404(FoodServing, pk=request.data['food_serving_id'])
             if len(meal.foodserving_set.filter(id=food_serving.id)) > 0:
@@ -92,12 +93,7 @@ def meal_detail(request, meal_id):
             serving1.set_index(index2)
             serving2.set_index(index1)
             serializer = MealSerializer(meal)
-            return Response({"message": "Successfully updated serving order on meal", "updated_meal": serializer.data}, status=200)
-          
-                
-            
-            
-            
+            return Response({"message": "Successfully updated serving order on meal", "updated_meal": serializer.data}, status=200)       
     except KeyError:
         return Response({"message": "please supply object with the following keys in request: food_serving_id: [int], index: [int0], (index2: [int0] **only for PUT requests)"}, status=400)
                 

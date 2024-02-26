@@ -18,3 +18,11 @@ class MealPlanOrder(models.Model):
     meal = models.ForeignKey(Meal, on_delete=models.CASCADE)
     meal_plan = models.ForeignKey(MealPlan, on_delete=models.CASCADE)
     index = models.IntegerField()
+    def update_index(self, amount):
+        new_amount = self.index + amount
+        setattr(self, 'index', new_amount)
+        self.save(update_fields=['index'])
+    
+    def set_index(self, new_idx):
+        setattr(self, 'index', new_idx)
+        self.save(update_fields=['index'])
