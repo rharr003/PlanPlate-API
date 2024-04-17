@@ -110,3 +110,5 @@ All fields are optional. Must included atleast 1 proper field. Incorrect fields 
 ```
 
 Returns the updated food item
+
+## Documentation for the rest of the routes to be added in near future along with the front-end of the application
