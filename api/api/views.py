@@ -39,7 +39,9 @@ def user_detail(request):
     user = CustomUser.objects.get(pk=user_id)
     if request.method == "GET":
         serializer = UserSerializer(user)
-        return Response(serializer.data)
+        desired_fields = ["id", "username", "height", "weight", "date_of_birth"]
+        result = {key: value for key,value in serializer.data.items() if key in desired_fields}
+        return Response(result)
     else:
         try: 
             user_for_update = get_object_or_404(CustomUser, pk=request.data['user_id'])

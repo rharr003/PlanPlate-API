@@ -19,28 +19,30 @@ def meal_plan(request):
     user_id = Token.objects.get(key=request.auth.key).user_id
     user = CustomUser.objects.get(pk=user_id)
     if request.method == 'GET':
-        inactive_meal_plans = MealPlan.objects.filter(owner=user).filter(active=False)
-        inactive_serializer = MealPlanSerializer(inactive_meal_plans, many=True)
-        try:
-            active_meal_plan = MealPlan.objects.get(owner=user, active=True)
-        except MealPlan.DoesNotExist:
-            return Response({'active': [], 'inactive': inactive_serializer.data})
-        active_serializer = MealPlanSerializerFull(active_meal_plan)
-        return Response({'active': active_serializer.data, 'inactive': inactive_serializer.data})
+        all_meal_plans = MealPlan.objects.filter(owner=user).order_by("-active")
+        minified_serializer = MealPlanSerializer(all_meal_plans, many=True)
+        # try:
+        #     current_meal_plan = MealPlan.objects.get(owner=user, active=True)
+        # except MealPlan.DoesNotExist:
+        #     return Response({'current': None, 'all': minified_serializer.data})
+        #return more detailed data on active meal plan since it will need to be fully rendered on the front end
+        # full_serializer = MealPlanSerializerFull(current_meal_plan)
+        return Response({'plans': minified_serializer.data})
     try:
         if request.method == 'POST':
+            print(request.data)
             request.data['owner_id'] = user_id
             serializer = MealPlanSerializer(data=request.data)
             if serializer.is_valid():
-                serializer.save()
-                #Only 1 active meal allowed at a time
                 if request.data["active"]:
                     try:
-                        meal_to_deactivate = MealPlan.objects.filter(owner=user).filter(active=True)[0]
+                        meal_to_deactivate = MealPlan.objects.get(owner=user, active=True)
                         meal_to_deactivate.deactivate()
-                    except IndexError:
+                    except MealPlan.DoesNotExist:
                         pass
-                return Response({"message": "Successfully created meal plan"}, status=200)
+                serializer.save()
+                #Only 1 active meal allowed at a time this just tells the api which meal plan to fetch the full data for on a get request.
+                return Response({"message": "Successfully created meal plan", "meal-plan": serializer.data}, status=200)
             return Response({"message": "missing required keys for creating meal plan. Ensure that you include an object with the following keys: name: [str], active: [boolean]"}, status=400)
         meal_plan_to_edit = get_object_or_404(MealPlan, pk=request.data['meal_plan_id'])
         has_permission = meal_plan_to_edit.owner.id == user.id or user.is_staff
@@ -52,10 +54,17 @@ def meal_plan(request):
         elif request.method == "PUT":
             serializer = MealPlanSerializer(meal_plan_to_edit)
             data = {key: value for key, value in request.data.items() if key in serializer.data}
+            if request.data["active"]:
+                    try:
+                        meal_to_deactivate = MealPlan.objects.get(owner=user, active=True)
+                        meal_to_deactivate.deactivate()
+                    except MealPlan.DoesNotExist:
+                        pass
             updated_meal_plan = meal_plan_to_edit.update(data)
             updated_serializer = MealPlanSerializer(updated_meal_plan)
-            return Response({'message': f"Successfully updated {updated_meal_plan.name}", "updated_meal_plan": updated_serializer.data})
-    except KeyError:
+            return Response({'message': f"Successfully updated {updated_meal_plan.name}", "updated_meal_plan": updated_serializer.data}, status=200)
+    except Exception as e:
+        print(e)
         return Response({"message": "Missing some required keys in the request body. Check your code and try again"}, status=400)
     
 # To do: add route for adding and editing meals to mealplan, make it so that only 1 mealplan can be active at a time. Then write tests and assemble documentation so I know how to use this api later when I build the front end. 
@@ -78,10 +87,11 @@ def meal_plan_detail(request, meal_plan_id):
     try:
         if request.method == "POST":
             meal_to_add = get_object_or_404(Meal, pk=request.data['meal_id'])
-            meals_to_be_adjusted = MealPlanOrder.objects.filter(meal_plan=meal_plan).filter(index__gte=request.data['index'])
-            for meal in meals_to_be_adjusted:
-                meal.update_index(1)
-            meal_plan.meal_set.add(meal_to_add, through_defaults={"index": request.data['index']})
+            curr_meal_plan_meals_len = meal_plan.meal_set.all().count()
+            # meals_to_be_adjusted = MealPlanOrder.objects.filter(meal_plan=meal_plan).filter(index__gte=request.data['index'])
+            # for meal in meals_to_be_adjusted:
+            #     meal.update_index(1)
+            meal_plan.meal_set.add(meal_to_add, through_defaults={"index": curr_meal_plan_meals_len})
             return Response({"message": "Successfully added new meal to meal plan"}, status=200)
         #Delete method removes specified meal from meal plan and updates indexes accordingly
         if request.method == "DELETE":

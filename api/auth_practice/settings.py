@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     "fooditems",
     "foodserving",
     "mealplans",
-    "meals"
+    "meals",
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
@@ -54,6 +55,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "corsheaders.middleware.CorsMiddleware"
 ]
 
 ROOT_URLCONF = "auth_practice.urls"
@@ -136,3 +138,4 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # tells django to use my custom user model
 AUTH_USER_MODEL = 'api.CustomUser'
+CORS_ORIGIN_ALLOW_ALL = True

@@ -16,7 +16,7 @@ def food_item(request):
     user_id = Token.objects.get(key=request.auth.key).user_id
     user = CustomUser.objects.get(pk=user_id)
     if request.method == "GET":
-        food_items = FoodItem.objects.filter(owner=user)
+        food_items = FoodItem.objects.filter(owner=user).order_by("name")
         serializer = FoodItemSerializer(food_items, many=True)
         return Response(serializer.data)
     elif request.method == "POST":

@@ -27,7 +27,7 @@ def food_serving(request):
         serializer = FoodServingSerializer(data=data)
         if(serializer.is_valid()):
             serializer.save()
-            return Response({"message": "successfully added food serving", "data": serializer.data}, status=200)
+            return Response({"message": "successfully added food serving", "food_serving": serializer.data}, status=200)
         return Response({"message": "missing required keys for creating food serving or food_item_id does not exist. Ensure that you include an object with the following keys: food_item_id: [int], serving_multiple: [float] and that the food_item_id exists"}, status=400)
     try:
         food_serving_id = request.data["food_serving_id"]

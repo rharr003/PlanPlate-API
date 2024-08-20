@@ -29,7 +29,7 @@ def meal(request):
             serializer = MealSerializer(data= request.data)
             if serializer.is_valid():
                 serializer.save()
-                return Response({"message": "succesfully added meal"}, status=200)
+                return Response({"message": "succesfully added meal", "meal_id": serializer.data['id']}, status=200)
             return Response({"message": "missing required keys for creating meal. Ensure that you include an object with the following keys: name: [str], type: ['meal' or 'snack']"}, status =400)
         meal_to_edit = get_object_or_404(Meal, pk=request.data['meal_id'])
         has_permission = meal_to_edit.owner.id == user.id or user.is_staff
@@ -63,22 +63,27 @@ def meal_detail(request, meal_id):
         serializer = MealSerializer(meal)
         return Response(serializer.data)   
     try:
-        #Post method on this route is for adding new food_serving at a specified index and adjusting the index of the rest of the items accordingly so that everything stays in the correct order.
+        #Post method on this route is for adding new food_serving removed inserting at a specific index as it was unnecessary and complicated
         if request.method == "POST":
             food_serving = get_object_or_404(FoodServing, pk=request.data['food_serving_id'])
             if len(meal.foodserving_set.filter(id=food_serving.id)) > 0:
                 return Response({"message": "This serving already exists on this meal consider increasing the quantity on existing serving"}, status=400)
-            servings_to_be_adjusted = MealOrder.objects.filter(meal=meal).filter(index__gte=request.data['index'])
-            for serving in servings_to_be_adjusted:
-                serving.update_index(1)
-            meal.foodserving_set.add(food_serving, through_defaults={'index': request.data['index']})
-
+            # servings_to_be_adjusted = MealOrder.objects.filter(meal=meal).filter(index__gte=request.data['index'])
+            # for serving in servings_to_be_adjusted:
+            #     serving.update_index(1)
+            next_index = MealOrder.objects.filter(meal=meal).count()
+            meal.foodserving_set.add(food_serving, through_defaults={'index': next_index})
+            
             return Response({"message": "successfully added new serving to meal"}, status=200)
         if request.method == "DELETE":
             try:
+                indexes = [serving.index for serving in MealOrder.objects.filter(meal=meal)]
+                print(indexes)
+                print(request.data['index'])
                 serving_to_delete = MealOrder.objects.filter(Q(index=request.data['index'])&Q(meal_id=meal_id))
                 serving_to_delete.delete()
                 servings_to_be_adjusted = MealOrder.objects.filter(meal=meal).filter(index__gt=request.data['index'])
+                print(servings_to_be_adjusted)
                 for serving in servings_to_be_adjusted:
                     serving.update_index(-1)
                 return Response({"message": "Successfully deleted the serving requested"}, status=204)

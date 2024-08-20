@@ -14,5 +14,5 @@ class MealPlan(models.Model):
         return self
     def deactivate(self):
         setattr(self, "active", False)
-        self.save(update_fields="active")
+        self.save(update_fields=["active"])
         return self
